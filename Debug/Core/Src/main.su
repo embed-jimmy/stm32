@@ -1,0 +1,14 @@
+main.c:79:6:delay_us	16	static
+main.c:83:5:get_distance	40	static
+main.c:118:5:main	176	static
+main.c:209:6:SystemClock_Config	88	static
+main.c:254:13:MX_I2C1_Init	8	static
+main.c:288:13:MX_TIM1_Init	32	static
+main.c:334:13:MX_TIM3_Init	32	static
+main.c:379:13:MX_TIM4_Init	32	static
+main.c:424:13:MX_USART1_UART_Init	8	static
+main.c:457:13:MX_USART2_UART_Init	8	static
+main.c:490:13:MX_GPIO_Init	48	static
+main.c:535:6:HAL_TIM_PeriodElapsedCallback	16	static
+main.c:542:6:calSensor	16	static
+main.c:593:6:Error_Handler	4	static,ignoring_inline_asm
