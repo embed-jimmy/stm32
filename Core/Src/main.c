@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include "fonts.h"
 #include "ssd1306.h"
+#include "string.h"
 
 /* USER CODE END Includes */
 
@@ -59,6 +60,11 @@ int threshold3 = 0;
 int threshold4 = 0;
 int state = 0;
 int counter = 0;
+int whileState = 0;
+char in[2];
+char in2[128];
+int len = 0;
+int arr[4];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -180,10 +186,31 @@ int main(void)
 //	  int distance2 = get_distance(2);
 //	  sprintf(out, "sensor1: %d sensor2: %d\r\n", distance1, distance2);
 //	  HAL_UART_Transmit(&huart2, &out, strlen(out), 100);
+	  if (whileState == 0){
+		  calSensor();
+		  sprintf(out, "count: %d state: %d\r\n", count, state);
+		  HAL_UART_Transmit(&huart2, &out, strlen(out), 100);
+		  if (HAL_UART_Receive(&huart1, &in, 2, 100) == HAL_OK){
+			  len = atoi(in);
+			  sprintf(in, "%d\n\r", len);
+//			  HAL_UART_Transmit(&huart2, &in, strlen(in), 100);
+			  whileState = 1;
+		  }
+	  }else if (whileState == 1){
+		  if (HAL_UART_Receive(&huart1, &in2, len, 100) == HAL_OK){
+//			  HAL_UART_Transmit(&huart2, &in2, len, 100);
+			  char *pt;
+			  pt = strtok(in2, ",");
+			  for(int i=0; i<8;i++){
+				  arr[i] = atoi(pt);
+				  sprintf(out, "%d\r\n", arr[i]);
+//				  HAL_UART_Transmit(&huart2, out, strlen(out), 100);
+				  pt = strtok (NULL, ",");
+			  }
+			  whileState = 0;
+		  }
+	  }
 
-	  calSensor();
-	  sprintf(out, "count: %d state: %d\r\n", count, state);
-	  HAL_UART_Transmit(&huart2, &out, strlen(out), 100);
 
 //	  ssd1306_Fill(Black);
 //	  sprintf(text1, "sen1:%d", distance1);
@@ -566,6 +593,9 @@ void calSensor(){
 		if (distance2 > threshold4){
 			state = 0;
 			count++;
+			char out[5];
+			sprintf(out, "%d", count);
+			HAL_UART_Transmit(&huart1, &out, strlen(out), 100);
 			 HAL_TIM_Base_Stop_IT(&htim4);
 			 TIM4->CNT = 0;
 			HAL_Delay(250);
@@ -574,6 +604,9 @@ void calSensor(){
 		if (distance1 > threshold3){
 			state = 0;
 			count--;
+			char out[5];
+			sprintf(out, "%d", count);
+			HAL_UART_Transmit(&huart1, &out, strlen(out), 100);
 			 HAL_TIM_Base_Stop_IT(&htim4);
 			 TIM4->CNT = 0;
 			HAL_Delay(250);
