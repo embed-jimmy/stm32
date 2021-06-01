@@ -1,4 +1,5 @@
-Core/Src/ssd1306.o: ../Core/Src/ssd1306.c D:/Embedded_Sys/lib/ssd1306.h \
+Core/Src/ssd1306.o: ../Core/Src/ssd1306.c ../Core/Src/ssd1306.h \
+ ../Core/Src/ssd1306_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -29,9 +30,11 @@ Core/Src/ssd1306.o: ../Core/Src/ssd1306.c D:/Embedded_Sys/lib/ssd1306.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- D:/Embedded_Sys/lib/fonts.h
+ ../Core/Src/ssd1306_fonts.h
 
-D:/Embedded_Sys/lib/ssd1306.h:
+../Core/Src/ssd1306.h:
+
+../Core/Src/ssd1306_conf.h:
 
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 
@@ -93,4 +96,4 @@ D:/Embedded_Sys/lib/ssd1306.h:
 
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
 
-D:/Embedded_Sys/lib/fonts.h:
+../Core/Src/ssd1306_fonts.h:

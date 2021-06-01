@@ -22,8 +22,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "fonts.h"
 #include "ssd1306.h"
+#include "ssd1306_fonts.h"
 #include "string.h"
 
 /* USER CODE END Includes */
@@ -54,6 +54,7 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 int count = 0;
+int prevZero = 0;
 int threshold1 = 0;
 int threshold2 = 0;
 int threshold3 = 0;
@@ -114,6 +115,39 @@ int get_distance(int sensor){
 	duration = TIM3->CNT;
 	return duration*0.034/2;
 }
+void display(){
+	//cap, airconOn, airconTemp, light1,light2,light3,light4,light
+	ssd1306_Fill(Black);
+	char line1[100];
+	char line2[100];
+	sprintf(line1, "%d/%d", count, arr[0]);
+	if (arr[1]){
+		sprintf(line2, "aircon: %d", arr[2]);
+	}else{
+		sprintf(line2, "aircon: off");
+	}
+
+	ssd1306_Fill(Black);
+	ssd1306_SetCursor(0, 0);
+	ssd1306_WriteString(line1, Font_11x18, White);
+	ssd1306_SetCursor(0, 22);
+	ssd1306_WriteString(line2, Font_7x10, White);
+	ssd1306_DrawRectangle(80, 24, 85, 29, White);
+	ssd1306_DrawRectangle(90, 24, 95, 29, White);
+	ssd1306_DrawRectangle(100, 24, 105, 29, White);
+	ssd1306_DrawRectangle(110, 24, 115, 29, White);
+	ssd1306_DrawRectangle(120, 24, 125, 29, White);
+	for (int k=0;k<5;k++){
+		if (arr[3+k]){
+			for (int i = 80+(10*k);i<85+(10*k);i++){
+			  for (int j=24;j<29;j++){
+				  ssd1306_DrawPixel(i, j, White);
+			  }
+			}
+		}
+	}
+	ssd1306_UpdateScreen();
+}
 
 /* USER CODE END 0 */
 
@@ -158,13 +192,11 @@ int main(void)
   char out[50];
   char text1[50];
   char text2[50];
-  if (ssd1306_Init(&hi2c1) != 0) {
-    Error_Handler();
-  }
+  ssd1306_Init();
   HAL_Delay(1000);
 
   ssd1306_Fill(Black);
-  ssd1306_UpdateScreen(&hi2c1);
+  ssd1306_UpdateScreen();
 
   int distance1 = get_distance(1);
   int distance2 = get_distance(2);
@@ -175,6 +207,41 @@ int main(void)
 
   HAL_TIM_Base_Stop_IT(&htim4);
   TIM4->CNT = 0;
+
+  char temp[2];
+  sprintf(temp, "-1");
+  HAL_UART_Transmit(&huart1, temp, strlen(temp), 100);
+
+  while(1){
+	if (whileState == 0){
+	  if (HAL_UART_Receive(&huart1, &in, 2, 100) == HAL_OK){
+		  len = atoi(in);
+		  sprintf(in, "%d\n\r", len);
+		  HAL_UART_Transmit(&huart2, &in, strlen(in), 100);
+		  whileState = 1;
+	  }
+	}else if (whileState == 1){
+	  if (HAL_UART_Receive(&huart1, &in2, len, 100) == HAL_OK){
+		  HAL_UART_Transmit(&huart2, &in2, len, 100);
+		  char temp2[2];
+		  sprintf(temp2, "0");
+		  HAL_UART_Transmit(&huart1, temp2, strlen(temp2), 100);
+		  prevZero = 1;
+		  char *pt;
+		  pt = strtok(in2, ",");
+		  for(int i=0; i<8;i++){
+			  arr[i] = atoi(pt);
+			  sprintf(out, "%d\r\n", arr[i]);
+			  pt = strtok (NULL, ",");
+		  }
+		  whileState = 0;
+		  break;
+	  }
+	}
+
+  }
+  display();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -199,6 +266,7 @@ int main(void)
 	  }else if (whileState == 1){
 		  if (HAL_UART_Receive(&huart1, &in2, len, 100) == HAL_OK){
 //			  HAL_UART_Transmit(&huart2, &in2, len, 100);
+//			  HAL_UART_Transmit(&huart2, "\r\n", 2, 100);
 			  char *pt;
 			  pt = strtok(in2, ",");
 			  for(int i=0; i<8;i++){
@@ -207,19 +275,11 @@ int main(void)
 //				  HAL_UART_Transmit(&huart2, out, strlen(out), 100);
 				  pt = strtok (NULL, ",");
 			  }
+			  display();
 			  whileState = 0;
 		  }
 	  }
 
-
-//	  ssd1306_Fill(Black);
-//	  sprintf(text1, "sen1:%d", distance1);
-//	  sprintf(text2, "sen2:%d", distance2);
-//	  ssd1306_SetCursor(0, 0);
-//	  ssd1306_WriteString(text1, Font_11x18, White);
-//	  ssd1306_SetCursor(0, 25);
-//	  ssd1306_WriteString(text2, Font_11x18, White);
-//	  ssd1306_UpdateScreen(&hi2c1);
 
 //	  HAL_Delay(25);
     /* USER CODE END WHILE */
@@ -593,22 +653,45 @@ void calSensor(){
 		if (distance2 > threshold4){
 			state = 0;
 			count++;
+			if (count == 1 && prevZero){
+				arr[1] = 1;
+				arr[3] = 1;
+				arr[4] = 1;
+				arr[5] = 1;
+				arr[6] = 1;
+				arr[7] = 1;
+			}
+			prevZero = 0;
 			char out[5];
 			sprintf(out, "%d", count);
 			HAL_UART_Transmit(&huart1, &out, strlen(out), 100);
 			 HAL_TIM_Base_Stop_IT(&htim4);
 			 TIM4->CNT = 0;
+			display();
 			HAL_Delay(250);
 		}
 	}else if (state == 4){
 		if (distance1 > threshold3){
 			state = 0;
 			count--;
+			if (count < 0){
+				count = 0;
+			}
+			if (count == 0){
+				prevZero = 1;
+				arr[1] = 0;
+				arr[3] = 0;
+				arr[4] = 0;
+				arr[5] = 0;
+				arr[6] = 0;
+				arr[7] = 0;
+			}
 			char out[5];
 			sprintf(out, "%d", count);
 			HAL_UART_Transmit(&huart1, &out, strlen(out), 100);
 			 HAL_TIM_Base_Stop_IT(&htim4);
 			 TIM4->CNT = 0;
+			 display();
 			HAL_Delay(250);
 		}
 	}
