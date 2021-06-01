@@ -83,10 +83,13 @@ static void MX_TIM4_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+// delay in microsecond
 void delay_us(int us){
 	TIM1->CNT = 0;
 	while (TIM1->CNT < us);
 }
+//get distance from the sensor
 int get_distance(int sensor){
 	GPIO_TypeDef* trig_port;
 	uint16_t trig_pin;
@@ -115,6 +118,7 @@ int get_distance(int sensor){
 	duration = TIM3->CNT;
 	return duration*0.034/2;
 }
+// display on lcd screen
 void display(){
 	//cap, airconOn, airconTemp, light1,light2,light3,light4,light
 	ssd1306_Fill(Black);
@@ -137,6 +141,7 @@ void display(){
 	ssd1306_DrawRectangle(100, 24, 105, 29, White);
 	ssd1306_DrawRectangle(110, 24, 115, 29, White);
 	ssd1306_DrawRectangle(120, 24, 125, 29, White);
+	// to fill the rectangle
 	for (int k=0;k<5;k++){
 		if (arr[3+k]){
 			for (int i = 80+(10*k);i<85+(10*k);i++){
@@ -209,9 +214,9 @@ int main(void)
   TIM4->CNT = 0;
 
   char temp[2];
-  sprintf(temp, "-1");
+  sprintf(temp, "-1"); // request data
   HAL_UART_Transmit(&huart1, temp, strlen(temp), 100);
-
+// for getting the first set of data
   while(1){
 	if (whileState == 0){
 	  if (HAL_UART_Receive(&huart1, &in, 2, 100) == HAL_OK){
@@ -619,6 +624,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+// timer for edge cases, sometimes it stucks in 1 state
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if (htim == &htim4){
 		state = 0;
@@ -626,6 +632,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		TIM4->CNT = 0;
 	}
 }
+// check if a person go in or go out
 void calSensor(){
 	int distance1 = get_distance(1);
 	HAL_Delay(10);
@@ -653,6 +660,7 @@ void calSensor(){
 		if (distance2 > threshold4){
 			state = 0;
 			count++;
+			// auto open air/light
 			if (count == 1 && prevZero){
 				arr[1] = 1;
 				arr[3] = 1;
@@ -677,6 +685,7 @@ void calSensor(){
 			if (count < 0){
 				count = 0;
 			}
+			// auto close air/light
 			if (count == 0){
 				prevZero = 1;
 				arr[1] = 0;
