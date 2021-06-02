@@ -239,6 +239,15 @@ int main(void)
 			  sprintf(out, "%d\r\n", arr[i]);
 			  pt = strtok (NULL, ",");
 		  }
+		  if (count == 0){
+			prevZero = 1;
+			arr[1] = 0;
+			arr[3] = 0;
+			arr[4] = 0;
+			arr[5] = 0;
+			arr[6] = 0;
+			arr[7] = 0;
+		}
 		  whileState = 0;
 		  break;
 	  }
@@ -260,8 +269,8 @@ int main(void)
 //	  HAL_UART_Transmit(&huart2, &out, strlen(out), 100);
 	  if (whileState == 0){
 		  calSensor();
-		  sprintf(out, "count: %d state: %d\r\n", count, state);
-		  HAL_UART_Transmit(&huart2, &out, strlen(out), 100);
+//		  sprintf(out, "count: %d state: %d\r\n", count, state);
+//		  HAL_UART_Transmit(&huart2, &out, strlen(out), 100);
 		  if (HAL_UART_Receive(&huart1, &in, 2, 100) == HAL_OK){
 			  len = atoi(in);
 			  sprintf(in, "%d\n\r", len);
@@ -280,7 +289,9 @@ int main(void)
 //				  HAL_UART_Transmit(&huart2, out, strlen(out), 100);
 				  pt = strtok (NULL, ",");
 			  }
+
 			  display();
+
 			  whileState = 0;
 		  }
 	  }
